@@ -22,6 +22,7 @@ async def create_topic(topic_data: dict, response: Response):
         return {"error": "Topic already exists"}
     return {"status": "created", "topic": name}
 
+
 @router.get("/topics")
 async def list_topics():
     return {
@@ -31,12 +32,14 @@ async def list_topics():
         ]
     }
 
+
 @router.delete("/topics/{name}")
 async def delete_topic(name: str, response: Response):
     if hub.delete_topic(name):
         return {"status": "deleted", "topic": name}
     response.status_code = 404
     return {"error": "Topic not found"}
+
 
 @router.get("/health")
 async def get_health():
@@ -46,9 +49,11 @@ async def get_health():
         "subscribers": sum(len(s) for s in hub.topics.values())
     }
 
+
 @router.get("/stats")
 async def get_stats():
     return {"topics": hub.get_stats()}
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str = None):

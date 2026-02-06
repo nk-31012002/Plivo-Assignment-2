@@ -24,7 +24,7 @@ http://localhost:8000
 
 # 🔐 Authentication
 
-This service implements **Basic Authentication via an API Key**.
+**Basic Authentication via an API Key**.
 
 **API Key:**
 ```
