@@ -1,97 +1,16 @@
-# from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response, status
-# from .hub import hub
-# from .schemas import WSRequest
-# from datetime import datetime
-# import asyncio
-
-# # Use 'router' consistently here
-# router = APIRouter()
-
-# @router.post("/topics")
-# async def create_topic(data: dict, response: Response):
-#     name = data.get("name")
-#     if not hub.create_topic(name):
-#         response.status_code = 409
-#         return {"error": "Topic already exists"}
-#     return {"status": "created", "topic": name}
-
-# @router.get("/topics"){
-#     async def list_topis():
-#         return{
-#             "topics" : [
-#                 {"name": name, "subscription": len(hub.topics[name])}
-#                 for name in hub.topics
-#             ]
-#         }
-# } [cite: 225, 231]
-
-# @router.get("/stats")
-# async def get_stats():
-#     return {"topics": hub.get_stats()}
-
-# @router.get("/health")
-# async def health():
-#     return {
-#         "uptime_sec": int(time.time() - hub.start_time),
-#         "topics": len(hub.topics)
-#     }
-
-# @router.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     queue = asyncio.Queue(maxsize=100) # Bounded for Backpressure [cite: 256]
-#     subscribed_topics = set()
-
-#     async def send_to_client():
-#         try:
-#             while True:
-#                 msg = await queue.get()
-#                 await websocket.send_json(msg)
-#         except: pass
-
-#     sender_task = asyncio.create_task(send_to_client())
-
-#     try:
-#         while True:
-#             raw_data = await websocket.receive_json()
-#             req = WSRequest(**raw_data)
-#             ts = datetime.utcnow().isoformat() + "Z"
-
-#             if req.type == "subscribe":
-#                 if req.topic in hub.topics:
-#                     hub.topics[req.topic].add(queue)
-#                     subscribed_topics.add(req.topic)
-#                     await websocket.send_json({"type": "ack", "topic": req.topic, "status": "ok", "request_id": req.request_id, "ts": ts})
-#                 else:
-#                     await websocket.send_json({"type": "error", "error": {"code": "TOPIC_NOT_FOUND"}, "ts": ts})
-
-#             elif req.type == "publish":
-#                 if req.topic in hub.topics:
-#                     hub.stats[req.topic]["messages"] += 1
-#                     event = {"type": "event", "topic": req.topic, "message": req.message.dict(), "ts": ts}
-#                     for q in hub.topics[req.topic]:
-#                         try:
-#                             q.put_nowait(event)
-#                         except asyncio.QueueFull:
-#                             q.get_nowait() # Drop oldest policy [cite: 260]
-#                             q.put_nowait(event)
-#                     await websocket.send_json({"type": "ack", "status": "ok", "request_id": req.request_id, "ts": ts})
-
-#             elif req.type == "ping":
-#                 await websocket.send_json({"type": "pong", "request_id": req.request_id, "ts": ts})
-
-#     except WebSocketDisconnect:
-#         for t in subscribed_topics:
-#             if t in hub.topics:
-#                 hub.topics[t].remove(queue)
-#         sender_task.cancel()
-
 import asyncio
 import time
 from datetime import datetime
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response, status, Header, HTTPException, Depends
 from .hub import hub
 from .schemas import WSRequest
+
+API_KEY = "plivo_secret_123"
+
+async def verify_api_key(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API Key")
+    return x_api_key
 
 router = APIRouter()
 
@@ -132,7 +51,16 @@ async def get_stats():
     return {"topics": hub.get_stats()}
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, token: str = None):
+    if token != API_KEY:
+        await websocket.accept()
+        await websocket.send_json({
+            "type": "error", 
+            "error": {"code": "UNAUTHORIZED", "message": "Invalid API Key"}, 
+            "ts": datetime.utcnow().isoformat() + "Z"
+        })
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
     await websocket.accept()
     queue = asyncio.Queue(maxsize=100)
     subscribed_topics = set()

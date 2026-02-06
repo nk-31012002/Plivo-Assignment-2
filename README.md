@@ -22,6 +22,16 @@ http://localhost:8000
 
 ---
 
+# 🔐 Authentication
+
+This service implements **Basic Authentication via an API Key**.
+
+**API Key:**
+```
+plivo_secret_123
+```
+
+
 # 🔎 API Verification
 
 ## 📌 REST APIs (Topic Management & Observability)
@@ -32,6 +42,7 @@ http://localhost:8000
 Invoke-RestMethod `
   -Uri "http://localhost:8000/topics" `
   -Method Post `
+  -Headers @{"X-API-Key"="plivo_secret_123"} `
   -Body '{"name": "orders"}' `
   -ContentType "application/json"
 ```
@@ -41,7 +52,8 @@ Invoke-RestMethod `
 ```powershell
 Invoke-RestMethod `
   -Uri "http://localhost:8000/topics" `
-  -Method Get
+  -Method Get `
+  -Headers @{"X-API-Key"="plivo_secret_123"}
 ```
 
 ### 📊 Check Service Stats
@@ -49,7 +61,8 @@ Invoke-RestMethod `
 ```powershell
 Invoke-RestMethod `
   -Uri "http://localhost:8000/stats" `
-  -Method Get
+  -Method Get `
+  -Headers @{"X-API-Key"="plivo_secret_123"}
 ```
 
 ### ❤️ Health Check
@@ -57,7 +70,8 @@ Invoke-RestMethod `
 ```powershell
 Invoke-RestMethod `
   -Uri "http://localhost:8000/health" `
-  -Method Get
+  -Method Get `
+  -Headers @{"X-API-Key"="plivo_secret_123"}
 ```
 
 ---
@@ -67,7 +81,7 @@ Invoke-RestMethod `
 ### 📍 Endpoint
 
 ```
-ws://localhost:8000/ws
+ws://localhost:8000/ws?token=plivo_secret_123
 ```
 
 ### 📦 Supported Payload Types
