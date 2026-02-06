@@ -1,33 +1,78 @@
-## How to Run
+# 🚀 Plivo PubSub Service
 
-1. **Build the Docker Image**:
-   ```powershell
-   docker build -t plivo-pubsub .
+## 🐳 How to Run
 
-2. **Run the Container**
-   docker run -p 8000:8000 plivo-pubsub
+### 1️⃣ Build the Docker Image
 
-## API Verification Commands
+```powershell
+docker build -t plivo-pubsub .
+```
 
-**REST (Topic Management & Observability)**
+### 2️⃣ Run the Container
 
-***Create Topic:***
-```Invoke-RestMethod -Uri "http://localhost:8000/topics" -Method Post -Body '{"name": "orders"}' -ContentType "application/json"```
+```powershell
+docker run -p 8000:8000 plivo-pubsub
+```
 
-***List Topics:***
-```Invoke-RestMethod -Uri "http://localhost:8000/topics" -Method Get```
+The service will be available at:
 
-***Check Stats:***
-```Invoke-RestMethod -Uri "http://localhost:8000/stats" -Method Get```
+```
+http://localhost:8000
+```
 
-***Health Check:***
-```Invoke-RestMethod -Uri "http://localhost:8000/health" -Method Get```
+---
 
-## WebSocket (Messaging)
+# 🔎 API Verification
 
-***Endpoint:***
-```ws://localhost:8000/ws```
+## 📌 REST APIs (Topic Management & Observability)
 
-***Payload Types:*** 
-```subscribe, unsubscribe, publish, ping```
+### ➕ Create a Topic
 
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:8000/topics" `
+  -Method Post `
+  -Body '{"name": "orders"}' `
+  -ContentType "application/json"
+```
+
+### 📋 List Topics
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:8000/topics" `
+  -Method Get
+```
+
+### 📊 Check Service Stats
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:8000/stats" `
+  -Method Get
+```
+
+### ❤️ Health Check
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:8000/health" `
+  -Method Get
+```
+
+---
+
+# 🔌 WebSocket API (Real-time Messaging)
+
+### 📍 Endpoint
+
+```
+ws://localhost:8000/ws
+```
+
+### 📦 Supported Payload Types
+
+- `subscribe`
+- `unsubscribe`
+- `publish`
+- `ping`
